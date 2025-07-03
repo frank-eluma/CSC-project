@@ -1,39 +1,22 @@
-import pyaudio
-import numpy as np
+import cv2
 
-# Parameters
-CHUNK = 1024  # Number of audio samples per frame
-FORMAT = pyaudio.paInt16  # 16-bit audio
-CHANNELS = 1  # Mono audio
-RATE = 44100  # Sample rate (Hz)
-THRESHOLD = 500  # Threshold for detecting sound
+# Load the pre-trained Haar Cascade classifier for face detection
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-def is_voice(data, threshold=THRESHOLD):
-    """Return True if volume is above the threshold."""
-    audio_data = np.frombuffer(data, dtype=np.int16)
-    volume = np.linalg.norm(audio_data)
-    return volume > threshold
+# Load the image (change 'your_image.jpg' to your filename)
+image = cv2.imread("C:/Users/FRANK/CSC project/images/pic 1.jpg")
 
-def listen():
-    p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
-                    input=True,
-                    frames_per_buffer=CHUNK)
+# Convert to grayscale (Haar cascades work on grayscale images)
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    print("Listening for voice... Press Ctrl+C to stop.")
-    try:
-        while True:
-            data = stream.read(CHUNK, exception_on_overflow=False)
-            if is_voice(data):
-                print("Voice detected!")
-    except KeyboardInterrupt:
-        print("Stopped listening.")
-    finally:
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
+# Detect faces
+faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-if "__name__" == "_main_":
-    listen()
+# Draw rectangles around detected faces
+for (x, y, w, h) in faces:
+    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+# Display the image
+cv2.imshow('Face Detection', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
